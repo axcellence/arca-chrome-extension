@@ -11,7 +11,6 @@ chrome.webRequest.onBeforeRequest.addListener(
         const rawData = requestBody.raw[0].bytes;
         const bodyString = decoder.decode(rawData);
         const bodyData = JSON.parse(bodyString);
-        console.log(bodyData);
         const tweetId = bodyData?.variables?.tweet_id;
         if (!tweetId) {
           throw new Error("No tweet ID found in the request body");
