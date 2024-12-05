@@ -1,24 +1,31 @@
 {
   "manifest_version": 3,
-  "name": "Arca — artifact collector",
-  "version": "1.0",
+  "name": "Arca — your internet artifact collection",
+  "description": "This is a browser extension that allows you to save tweets / 𝕏 posts to your Arca collection.",
+  "version": "0.12",
   "permissions": [
     "storage",
     "webRequest",
     "webRequestBlocking",
     "commands",
-    "activeTab"
+    "activeTab",
+    "tabs",
+    "contextMenus",
+    "cookies"
   ],
+  "externally_connectable": {
+    "matches": ["http://localhost:3000/*"]
+  },
   "host_permissions": [
     "https://twitter.com/*",
     "https://x.com/*",
-    "http://localhost/*"
+    "http://localhost:3000/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [{
-    "matches": ["https://twitter.com/*", "https://x.com/*"],
+    "matches": ["https://twitter.com/*", "https://x.com/*", "http://localhost:3000/*"],
     "js": ["content.js"]
   }],
   "commands": {
