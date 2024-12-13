@@ -26,12 +26,13 @@ function getArtifactLinkType(url) {
  * @returns {Promise<Object>} - The response from the Arca API
  */
 async function saveArtifact(artifact, type, source) {
-  console.log(`Saving artifact to Arca: ${artifact}`);
+  console.log(`Saving ${type} artifact to Arca: ${artifact}`);
   try {
     const token = await getToken();
+
     if (!token) {
       console.error("No token found.");
-      return;
+      signIn();
     }
     const response = await fetch(`${appUrl}/api/save-artifacts`, {
       method: "POST",
@@ -42,9 +43,14 @@ async function saveArtifact(artifact, type, source) {
       },
       body: JSON.stringify({ artifact, type, source }),
     });
+
     if (!response.ok) {
+      if (response.status === 401) {
+        await chrome.cookies.remove({ url: appUrl, name: "__session" });
+        signIn();
+      }
       const { error } = await response.json();
-      throw new Error(error);
+      throw new Error(error || response.statusText);
     }
     return await response.json();
   } catch (error) {
@@ -75,6 +81,22 @@ chrome.runtime.onInstalled.addListener(() => {
     title: "Add text to Arca",
     contexts: ["selection"],
   });
+});
+
+// Update context menu based on page URL
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url || tab.url) {
+    const url = changeInfo.url || tab.url;
+    if (url.includes('twitter.com') || url.includes('x.com')) {
+      chrome.contextMenus.update('save-page-artifact', {
+        title: 'Add tweet to Arca'
+      });
+    } else {
+      chrome.contextMenus.update('save-page-artifact', {
+        title: 'Add page to Arca'
+      });
+    }
+  }
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -118,3 +140,8 @@ const getToken = async () => {
     console.error("No token found.");
   }
 };
+
+function signIn() {
+  // open a new tab with the sign in page
+  chrome.tabs.create({ url: `${appUrl}/sign-in` });
+}
